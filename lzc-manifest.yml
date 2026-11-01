@@ -1,0 +1,50 @@
+application:
+  subdomain: speedtesttracker
+  multi_instance: false
+  upstreams:
+    - location: /package-licenses/
+      backend: file:///lzcapp/pkg/content/licenses/
+    - location: /
+      backend: http://speedtesttracker:8080/
+
+services:
+  speedtesttracker:
+    # upstream: ghcr.io/alexjustesen/docker-speedtest-tracker:1.13.0
+    image: ghcr.1ms.run/alexjustesen/docker-speedtest-tracker:1.13.0
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_TIMEZONE=Asia/Shanghai
+      - APP_LOCALE=zh_CN
+      - DB_CONNECTION=sqlite
+      # Laravel requires an application key; derive it per deployment instead of
+      # shipping a fixed value.
+      - |-
+        APP_KEY=base64:{{ stable_secret "speedtest_tracker_app_key" | replace "\r" "" | replace "\n" "" }}
+      - |-
+        APP_URL=https://{{ .S.AppDomain }}
+      # Speedtests are scheduled by the app's own queue worker.
+      - AUTORUN_ENABLED=true
+      - AUTORUN_LARAVEL_MIGRATION=true
+      - SPEEDTEST_SCHEDULE=0 */6 * * *
+    binds:
+      - /lzcapp/var/data:/var/www/html/database
+      - /lzcapp/var/storage:/var/www/html/storage
+
+usage: |
+  Speedtest Tracker 定时跑网络测速并记录历史，用图表看带宽趋势，失败了还能发通知。
+
+  使用方法：
+  1. 打开应用，首次访问会要求创建管理员账号（邮箱 + 密码）。
+  2. 登录后到「设置」里选择测速服务器、设定测速计划（本包默认每 6 小时一次）。
+  3. 等第一次测速完成后，仪表盘就会有数据。
+
+  数据与安全：
+  - SQLite 数据库、上传与缓存分别保存在 /lzcapp/var/data 与 /lzcapp/var/storage，卸载应用会一并删除，请提前备份。
+  - 应用密钥由平台稳定密钥生成，每个部署各不相同，不写成固定值。
+  - 本包不预置账号或默认密码，管理员由你本人在首次访问时创建。
+  - 应用经懒猫入口鉴权访问，未开放无需登录的接口路径。
+
+  说明：
+  - 测速结果取决于运行容器的这台设备所在的网络，不代表其他设备。
+  - 未做真机验证：首次建号、测速执行、历史图表、通知以及重启后持久化均未在设备上实测。

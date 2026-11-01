@@ -1,0 +1,18 @@
+package: community.lazycat.app.speedtesttracker
+version: 1.13.0
+name: Speedtest Tracker
+description: "Scheduled internet speed tests with history charts and alerts."
+min_os_version: "1.5.0"
+homepage: https://github.com/alexjustesen/speedtest-tracker
+author: alexjustesen
+license: MIT
+permissions:
+  required:
+    - net.internet
+locales:
+  zh:
+    name: Speedtest Tracker
+    description: "定时测速并记录历史：带宽趋势图表、失败告警与多种通知渠道。"
+  en:
+    name: Speedtest Tracker
+    description: "Scheduled internet speed tests with history charts and alerts."
